@@ -2,24 +2,41 @@
 <html>
 <head>
 	<title></title>
-	<link href="rest.css" rel="stylesheet" type="text/css">
+	<link href="reset.css" rel="stylesheet" type="text/css">
 	<link href="convo.css" rel="stylesheet" type="text/css">
 </head>
 <body>
 	<!-- tapping allows user to switch permissions, name for initial demo -->
 	<div id="header"> 
-		foobar
+		<form> 
+			<input type="text" id="name" value="Anon">
+			<input type="radio" id="perm_true" value="True">
+			<input type="radio" id="perm_false" value="False">
+			<input type="submit" value="Submit"> 
+		</form>
 	</div>
 	<!-- protected thread -->
-	<div id-"main" class="convo_box"> 
-		foo
+	<div id="main" class="convo_box"> 
+		<div class="thread"> foo </div>
+		<form> 
+			<input type="text" class="chatbox" value="hi"> 
+			<input type="submit" value="Submit"> 
+		</form>
 	</div>
 	<!-- peanut gallery -->
 	<div id="peanut" class="convo_box"> 
-		bar
+		<div class="thread"> bar </div>
+		<form> 
+			<input type="text" class="chatbox" value="hi"> 
+			<input type="submit" value="Submit"> 
+		</form>
 	</div>
 
 	<script src="jquery-1.9.0.js"></script>
 	<script type="text/javascript" src="teamtalk.js"></script>
+	<!-- maybe include these later, makes cross-platforming touch events easier
+	http://touchpunch.furf.com/
+	<script src="http://code.jquery.com/ui/1.8.21/jquery-ui.min.js"></script>
+	<script src="jquery.ui.touch-punch.min.js"></script> -->
 </body>
 </html>

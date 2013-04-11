@@ -1,16 +1,21 @@
 #header {
-	background-color: blue;
+	background-color: #44f;
 	display: fixed;
+	height: 10%;
 }
 
 .convo_box {
 	display: block;
 	float: left;
+	clear: both;
+	width: 100%;
 }
 	
 #main {
-	background-color: purple; 
+	background-color: #909;
+	height: 60%;
 }
 #peanut {
-	background-color: red;
+	background-color: #c33;
+	height: 30%
 }
