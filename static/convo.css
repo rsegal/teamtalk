@@ -1,0 +1,16 @@
+#header {
+	background-color: blue;
+	display: fixed;
+}
+
+.convo_box {
+	display: block;
+	float: left;
+}
+	
+#main {
+	background-color: purple; 
+}
+#peanut {
+	background-color: red;
+}
