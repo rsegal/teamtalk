@@ -1,10 +1,10 @@
+var io = require('socket.io').listen(8888);
+
 var express = require("express");
 var app = express();
 
 var fs = require("fs");
 app.use(express.bodyParser());
-
-var io = require('socket.io').listen(8888);
 
 function handler (req, res) {
   fs.readFile(__dirname + '/index.html',
@@ -19,6 +19,10 @@ function handler (req, res) {
   });
 }
 
+app.get("/static/:staticFilename", function (request, response) {
+  response.sendfile("static/" + request.params.staticFilename);
+});
+
 io.sockets.on("connection", function(socket) { 
 	conversers[socket.id] = ["",false,true];
 	socket.on('name', function(data) {
@@ -27,15 +31,22 @@ io.sockets.on("connection", function(socket) {
 	});
 	socket.on('post', function(data) {
 		console.log(data);
-		var statement = [data['name'],data['text']];
-		conversation.append([data['name'],data['text']]);
-		sockets.emit('post', {statement: statement});
+		var convo = conversations[data["conversation"]];
+		var statement = [data['name'],data['text'],data['date']];
+		if (convo === undefined) {
+			conversations[data["conversation"]] = [];
+			convo = conversations[data["conversation"]];
+		}
+		convo.push(statement);
+		socket.broadcast.emit('post', {statement: statement, conv: data["conversation"]});
 	});
 });
 
 function initServer() {
 	conversers = {}; // dictionary of user keyed by id, continaing username, permissions, and connection
-	conversation = []; // ordered list of user,statement pairs
+	conversations = {};
+	conversations["#main .chatbox"] = []; //ordered list of user,text pairs
+	conversations["#peanut .chatbox"] = [];
 }
 
 initServer();

@@ -19,3 +19,25 @@
 	background-color: #c33;
 	height: 30%
 }
+
+.post {
+	background-color: white;
+	border: black 1px solid;
+}
+
+.post>.name {
+	text-align: left;
+	color: green;
+	display: inline;
+}
+
+.post>.content {
+	text-align: right;
+	display: block;
+}
+
+.post>.date {
+	color: blue;
+	text-align: left;
+	display: inline;
+}
