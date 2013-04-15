@@ -6,15 +6,19 @@ function dbPrint(s) {
 }
 
 function addPost(conversation, name, content, date) {
-	var nameObj = $("<div>").text(name).addClass("name");
+	var nameObj = $("<div>").text(name + ": ").addClass("name");
 	var dateObj = $("<div>").text(date).addClass("date");
 	var contentObj = $("<div>").text(content).addClass("content");
 	var newPost = $("<div>").addClass("post").append(nameObj).append(dateObj).append(contentObj);
 	conversation.append(newPost);
 }
 
+function getPermissions() {
+	return $('#perm_true:checked').val();
+}
+
 function permissionsEffects() {
-	var permission = $('#perm_true:checked').val();
+	var permission = getPermissions();
 	dbPrint("Permission: " + permission);
 	if (permission === "true") {
 		$("#main form").css("display","block");
@@ -57,5 +61,5 @@ socket.on("post", function(data) {
 
 $(document).ready(function () {
 	dbPrint("Starting app...");
-		permissionsEffects();
+	permissionsEffects();
 });
