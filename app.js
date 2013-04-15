@@ -3,7 +3,8 @@ var app = express();
 
 var fs = require("fs");
 app.use(express.bodyParser());
-var teamdata;
+
+var userdata;
 
 function readFile(filename, defaultData, callbackFn) {
 	fs.readFile(filename, function(err, data) {
@@ -28,56 +29,56 @@ function writeFile(filename, data, callbackFn) {
 	});
 };
 
-// Get all
-app.get("/track_list/", function (request, response) {
+// Get all users
+app.get("/user/", function (request, response) {
 	console.log("getting /test");
 	response.send({
 		success: true
 	});
 });
 
-// Get one
-app.get("/track_list/:id", function (request, response) {
+// Get one user
+app.get("/user/:id", function (request, response) {
 	console.log("getting file");
-    response.sendfile("track_list/sf_" + request.params.id);
+    response.sendfile("user/" + request.params.id);
 });
 
-// Create one
-app.post("/track_list", function(request, response){
-	var track = {};
+// Create one user
+app.post("/user", function(request, response){
+	var user = {};
 	response.send({
-		track: track,
+		user: user,
 		success: true
 	});
 });
 
-// Update one
-app.put("/track_list/sf_:id", function(request, repsonse){
+// Update one user
+app.put("/user/:id", function(request, repsonse){
 	var id = request.params.id;
 	response.send({
-		track: track,
+		user: user,
 		success: true
 	});
 });
 
-// Delete all
-app.delete("/track_list", function(request, repsonse){
-	teamdata = [];
-	writeFile("track_list.txt", JSON.stringify(teamdata));
+// Delete all users
+app.delete("/user", function(request, repsonse){
+	userdata = [];
+	writeFile("users.txt", JSON.stringify(userdata));
 	response.send({
-		teamdata: teamdata,
+		userdata: userdata,
 		success: true
 	});
 });
 
-// Delete one
-app.delete("/track_list/sf_:id", function(request, response){
+// Delete one user
+app.delete("/user/:id", function(request, response){
 	var id = request.params.id;
-	var old = teamdata[id];
-	teamdata.splice(id, 1);
-	writeFile("track_list.txt", JSON.stringify(teamdata));
+	var old = userdata[id];
+	userdata.splice(id, 1);
+	writeFile("users.txt", JSON.stringify(teamdata));
 	response.send({
-		teamdata: old,
+		userdata: old,
 		success: (old !== undefined)
 	});
 });
@@ -89,8 +90,8 @@ app.get("/static/:filename", function(request, response){
 
 function initServer() {
 	var defaultList = "{}";
-	readFile("teams.txt", defaultList, function(err, data) {
-		teamdata = JSON.parse(data);
+	readFile("users.txt", defaultList, function(err, data) {
+		userdata = JSON.parse(data);
 	});
 }
 
