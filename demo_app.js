@@ -3,7 +3,7 @@ var io = require('socket.io').listen(8888);
 var express = require("express");
 var app = express();
 
-//var fs = require("fs");
+var fs = require("fs");
 app.use(express.bodyParser());
 
 function handler (req, res) {
@@ -20,8 +20,7 @@ function handler (req, res) {
 }
 
 app.get("/static/:staticFilename", function (request, response) {
-	console.log(request.params.staticFilename);
-	response.sendfile("static/" + request.params.staticFilename);
+  response.sendfile("static/" + request.params.staticFilename);
 });
 
 io.sockets.on("connection", function(socket) { 

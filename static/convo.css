@@ -17,32 +17,27 @@
 }
 #peanut {
 	background-color: #c33;
-	height: 30%;
+	height: 30%
 }
 
 .post {
-	background-color: #888;
-	opacity: 0.5;
+	background-color: white;
 	border: black 1px solid;
 }
 
 .post>.name {
 	text-align: left;
-	color: black;
-	background-color: #aaa;
+	color: green;
 	display: inline;
 }
 
 .post>.content {
-	width: 60%;
-	text-align: left;
-	position: right;
-	display: inline-block;
-	background-color: #888;
+	text-align: right;
+	display: block;
 }
 
 .post>.date {
-	background-color: #aaa;
+	color: blue;
 	text-align: left;
 	display: inline;
 }
