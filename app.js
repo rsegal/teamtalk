@@ -28,7 +28,6 @@ function onDocumentsInserted(err){
     closeDb();
 }
 
-
 function insertDocuments(collection, docs, done){
     if (docs.length === 0){
         done(null);
@@ -145,11 +144,10 @@ io.sockets.on("connection", function(socket) {
 	});
 });
 
-function initServer() {
-    
+function initServer() {    
     conversations = {};
-    conversations["#main .chatbox"] = []; //ordered list of user,text pairs
-    conversations["#peanut .chatbox"] = [];
+    conversations["main conv"] = []; //ordered list of user,text pairs
+    conversations["peanut conv"] = [];
 }
 
 initServer();

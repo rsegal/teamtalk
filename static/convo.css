@@ -4,18 +4,18 @@
 	height: 10%;
 }
 
-.convo_box {
+.conv {
 	display: block;
 	float: left;
 	clear: both;
 	width: 100%;
 }
 	
-#main {
+.main {
 	background-color: #909;
 	height: 60%;
 }
-#peanut {
+.peanut {
 	background-color: #c33;
 	height: 30%
 }
