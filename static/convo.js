@@ -1,4 +1,4 @@
-socket = io.connect("http://localhost:8888");
+socket = io.connect("http://198.199.77.186:8888");
 debugging = true;
 
 function dbPrint(s) {
