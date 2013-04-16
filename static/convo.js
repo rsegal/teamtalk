@@ -6,7 +6,7 @@ function dbPrint(s) {
 }
 
 function getUser() {
-    return $("#header #name").val();
+    return $("#header #demo_name #name").val();
 }
 
 function dateToTimeframe(date) {
@@ -47,7 +47,7 @@ function Conversation(name,mainDOMObj,peanutDOMObj) {
     self.mainDOMObj = mainDOMObj;
     self.mainDOMObj.parent('.convSuite').attr("id", self.name);
     self.peanutDOMObj = peanutDOMObj;
-
+    
     self.addPost = function(context, name, content, date) {
         var nameObj = $("<div>").text(name).addClass("name");
         var dateObj = $("<div>").text(date).addClass("date");
@@ -55,42 +55,99 @@ function Conversation(name,mainDOMObj,peanutDOMObj) {
         var newPost = $("<div>").addClass("post").append(nameObj).append(dateObj).append(contentObj);
 	dbPrint(context);
 	if (context === "main conv") self.mainDOMObj.children(".thread").append(newPost);
-	else self.peanutDOMObj.children(".thread").append(newPost);
+	else if (self.peanutDOMObj !== null) self.peanutDOMObj.children(".thread").append(newPost);
     }
     
     self.getPermissions = function() {
 	return ($('#perm_true:checked').val() === "true");
     }
     
-    self.permissionEffects = function() {
+    self.viewEffects = function() {
 	var permission = self.getPermissions();
 	if (permission) {
-	    $(".main form").css("display","block");
+	    $(".main form").show();
 	}
 	else {
-            $(".main form").css("display","none");
+            $(".main form").hide();
         }
+	if (self.peanutDOMObj === null) {
+	    $(".peanut").hide();
+	}
     }
 }
 
-$("#header form").submit(function() {
-	conv.permissionEffects();
-	return false;
-}); 
+function newConversation(name, hasPeanutGallery) {
+    var suite = $('<div>').addClass('convSuite').attr('id', name);
+    var header = $('<div>').addClass('header').text(name);
+    var mainConv = $('<div>').addClass('conv main');
+    var peanutConv = $('<div>').addClass('conv peanut');
+    var mainThread = $('<div>').addClass('thread').text("Committee");
+    var mainForm = $('<form>').append($('<input>').attr('type', 'text')).append($('<input>').attr('type', 'submit'));
+    var peanutThread = $('<div>').addClass('thread').text("Peanut Gallery");
+    var peanutForm = $('<form>').append($('<input>').attr('type', 'text')).append($('<input>').attr('type', 'submit'));
+    mainConv.append(mainThread).append(mainForm);
+    peanutConv.append(peanutThread).append(peanutForm);
+    suite.append(header).append(mainConv).append(peanutConv);
+    $('body').append(suite);
 
-function getUserName() {
-    return $("#header #name").val();
+    var conv;
+    if (hasPeanutGallery) { 
+	conv = new Conversation(name,$(".convSuite .main"),$(".convSuite .peanut"));
+    }
+    else conv = new Conversation(name,$(".convSuite .main"),null);
+
+    conv.viewEffects();
+
+    $(".conv form").submit( function() {
+    // send the post event, with some data
+	var content = $(this).children("[type=text]").val();
+	var context = $(this).parent('.conv').attr('class');
+	currentConv = $(this).parents(".convSuite").attr("id");
+	dbPrint(context);
+	var my_name = getUserName();
+	var date = new Date();
+    //    var dateString = date.getHours() + " : " + date.getMinutes() + " : " + date.getSeconds();
+	dbPrint(my_name + " posted " + content + " at " + date);
+	socket.emit('post', {
+            conversation : context,
+            name : my_name,
+            text : content,
+            date : date
+	});
+	dbPrint(context + " , " + my_name + " , " + content + " , " + date);
+	conversations[currentConv].addPost(context, my_name, content, date);
+	return false;
+    });
+
+    return conv;
 }
 
-$(".conv form").submit(function() {
+$("#header #demo_name").submit(function() {
+    conversations[currentConv].viewEffects();
+    return false;
+});
+
+$("#header #demo_spawn_conv").submit(function() {
+    var name = $(this).children("#name").val();
+    $(this).children("#name").val("");
+    var hasPeanutGallery = true;
+    conversations[name] = newConversation(name, hasPeanutGallery);
+    return false;
+});
+
+function getUserName() {
+    return $("#header #demo_name #name").val();
+}
+
+/* $(".conv form").submit( function() {
     // send the post event, with some data
-    var content = $(this).children(".chatbox").val();
-//    $(this).children(".chatbox").val("");
+    var content = $(this).children("[type=text]").val();
     var context = $(this).parent('.conv').attr('class');
+    currentConv = $(this).parents(".convSuite").attr("id");
     dbPrint(context);
     var my_name = getUserName();
     var date = new Date();
-//    var dateString = date.getHours() + " : " + date.getMinutes() + " : " + date.getSeconds();
+    //    var dateString = date.getHours() + " : " + date.getMinutes() + " : " + date.getSeconds();
     dbPrint(my_name + " posted " + content + " at " + date);
     socket.emit('post', {
     	conversation : context,
@@ -99,21 +156,24 @@ $(".conv form").submit(function() {
     	date : date
     });
     dbPrint(context + " , " + my_name + " , " + content + " , " + date);
-    conv.addPost(context, my_name, content, date);
+    conversations[currentConv].addPost(context, my_name, content, date);
     return false;
-});
+});*/
 
 socket.on("post", function(data) {
     var name = data["statement"][0];
     var msg = data["statement"][1];
-    var conversation = data["conv"];
+    var context = data["conv"];
     var date = data["statement"][2];
-    conv.addPost(conversation,name,msg,date);
+    conversations[context].addPost(context,name,msg,date);
 });
 
 $(document).ready(function () {
     dbPrint("Starting app...");
-    conv = new Conversation("demo",$(".convSuite .main"),$(".convSuite .peanut"));
-    conv.permissionEffects();
+    conversations = {};
+    var convName = "demo";
+    var conv = newConversation(convName, true);
     dbPrint(conv);
+    conversations[convName] = conv;
+    currentConv = convName;
 });

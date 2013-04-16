@@ -4,6 +4,10 @@
 	height: 10%;
 }
 
+#header #demo_spawn_conv {
+    background-color: white;
+}
+
 .conv {
 	display: block;
 	float: left;
