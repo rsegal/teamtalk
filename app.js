@@ -1,99 +1,157 @@
+var io = require('socket.io').listen(8888);
 var express = require("express");
 var app = express();
-
 var fs = require("fs");
 app.use(express.bodyParser());
 
-var userdata;
+var mongo = require('mongodb');
+var host = 'localhost';
+var port = mongo.Connection.DEFAULT_PORT;
 
-function readFile(filename, defaultData, callbackFn) {
-	fs.readFile(filename, function(err, data) {
-		if (err) {
-			console.log("Error reading file: ", filename);
-			data = defaultData;
-		} else {
-			console.log("Success reading file: ", filename);
-		}
-		if (callbackFn) callbackFn(err, data);
-	});
-};
+var optionsWithEnableWriteAccess = { w: 1 };
+var dbName = 'testDb';
 
-function writeFile(filename, data, callbackFn) {
-	fs.writeFile(filename, data, function(err) {
-		if (err) {
-			console.log("Error writing file: ", filename);
-		} else {
-			console.log("Success writing file: ", filename);
-		}
-		if (callbackFn) callbackFn(err);
-	});
-};
+var client = new mongo.Db(
+    dbName,
+    new mongo.Server(host, port),
+    optionsWithEnableWriteAccess
+);
 
-// Get all users
-app.get("/user/", function (request, response) {
-	console.log("getting /test");
-	response.send({
-		success: true
-	});
-});
+function closeDb(){
+    client.close();
+}
 
-// Get one user
-app.get("/user/:id", function (request, response) {
-	console.log("getting file");
-    response.sendfile("user/" + request.params.id);
-});
+function onDocumentsInserted(err){
+    if (err)
+        throw err;
+    console.log('documents inserted!');
+    closeDb();
+}
+
+
+function insertDocuments(collection, docs, done){
+    if (docs.length === 0){
+        done(null);
+        return;
+    }
+    var docHead = docs.shift(); //shift removes first element from docs
+    collection.insert(docHead, function onInserted(err){
+        if (err){
+            done(err);
+            return;
+        }
+        insertDocuments(collection, docs, done);
+    });
+}
 
 // Create one user
 app.post("/user", function(request, response){
-	var user = {};
-	response.send({
-		user: user,
-		success: true
-	});
+    var user = {
+        'email' : request.body.email,
+        'password' : request.body.password,
+        'orgs' : { },
+        'projects' : { },
+        'groups' : { },
+        'convs' : { },
+        'files' : { },
+    };
+    client.open(function(){
+        client.collection('userCollection', function(error, userCollection){
+            insertDocuments(userCollection, [user], onDocumentsInserted);
+        });
+    });
 });
 
-// Update one user
-app.put("/user/:id", function(request, repsonse){
-	var id = request.params.id;
-	response.send({
-		user: user,
-		success: true
-	});
+app.post('/org', function(request, response){
+    var org = {
+        'name' : request.body.name,
+        'projects' : { },
+    };
+    client.open(function(){
+        client.collection('orgCollection', function(error, orgCollection){
+            insertDocuments(orgCollection, [org], onDocumentsInserted);
+        });
+    });
 });
 
-// Delete all users
-app.delete("/user", function(request, repsonse){
-	userdata = [];
-	writeFile("users.txt", JSON.stringify(userdata));
-	response.send({
-		userdata: userdata,
-		success: true
-	});
+app.post('/project', function(request, response){
+    var proj = {
+        'name' : request.body.name,
+        'groups' : { },
+    };
+    client.open(function(){
+        client.collection('projCollection', function(error, projCollection){
+            insertDocuments(projCollection, [proj], onDocumentsInserted);
+        });
+    });
 });
 
-// Delete one user
-app.delete("/user/:id", function(request, response){
-	var id = request.params.id;
-	var old = userdata[id];
-	userdata.splice(id, 1);
-	writeFile("users.txt", JSON.stringify(teamdata));
-	response.send({
-		userdata: old,
-		success: (old !== undefined)
-	});
+app.post('/group', function(request, response){
+    var group = {
+        'name' : request.body.name,
+        'conv' : { },
+    };
+    client.open(function(){
+        client.collection('groupCollection', function(error, groupCollection){
+            insertDocuments(groupCollection, [group], onDocumentsInserted);
+        });
+    });
 });
 
-// Get one html page
-app.get("/static/:filename", function(request, response){
-    response.sendfile("static/" + request.params.filename);
+app.post('/conv', function(request, response){
+    var conv = {
+        'name' : request.body.name,
+    };
+    client.open(function(){
+        client.collection('convCollection', function(error, convCollection){
+            insertDocuments(convCollection, [conv], onDocumentsInserted);
+        });
+    });
+});
+
+function handler (req, res) {
+  fs.readFile(__dirname + '/index.html',
+  function (err, data) {
+    if (err) {
+      res.writeHead(500);
+      return res.end('Error loading index.html');
+    }
+
+    res.writeHead(200);
+    res.end(data);
+  });
+}
+
+app.get("/static/:staticFilename", function (request, response) {
+  response.sendfile("static/" + request.params.staticFilename);
+});
+
+io.sockets.on("connection", function(socket) { 
+	//conversers[socket.id] = ["",false,true];
+	socket.on('name', function(data) {
+		console.log(data);
+		conversers[socket.id] = [data['name'],data['permissions'],true];
+	});
+	socket.on('post', function(data) {
+		console.log(data);
+		var convo = conversations[data["conversation"]];
+		var statement = [data['name'],data['text'],data['date']];
+		if (convo === undefined) {
+			conversations[data["conversation"]] = [];
+			convo = conversations[data["conversation"]];
+		}
+		convo.push(statement);
+		socket.broadcast.emit('post', {statement: statement, conv: data["conversation"]});
+	});
 });
 
 function initServer() {
-	var defaultList = "{}";
-	readFile("users.txt", defaultList, function(err, data) {
-		userdata = JSON.parse(data);
-	});
+    
+    conversations = {};
+    conversations["#main .chatbox"] = []; //ordered list of user,text pairs
+    conversations["#peanut .chatbox"] = [];
 }
 
 initServer();
 app.listen(8889);
+
